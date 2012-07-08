@@ -9,6 +9,10 @@ Author: Fernando Gómez Pose
 Author URI: http://fergomez.es/
 License: GPL2
 */
+
+global $wpdb;
+$wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
+$wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
 	
 /**
  * Creates (if they don't exist) the database tables for storing all the links retrieved from
@@ -29,13 +33,9 @@ License: GPL2
  *    - value : urls
  *    
  *  @access private
- *  @return boolean false in case of problems 
  */	
-function wpmusiclinks_create_tables() {
+function wpmusiclinks_create_tables() {	
 	global $wpdb;
-	$wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
-	$wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
-	
 	$charset_collate = '';
 	if($wpdb->supports_collation()) {
 		if(!empty($wpdb->charset)) {
@@ -46,9 +46,9 @@ function wpmusiclinks_create_tables() {
 		}
 	}
 	
-	if(@is_file(ABSPATH.'/wp-admin/upgrade-functions.php')) {
+	if (@is_file(ABSPATH.'/wp-admin/upgrade-functions.php')) {
 		include_once(ABSPATH.'/wp-admin/upgrade-functions.php');
-	} elseif(@is_file(ABSPATH.'/wp-admin/includes/upgrade.php')) {
+	} elseif (@is_file(ABSPATH.'/wp-admin/includes/upgrade.php')) {
 		include_once(ABSPATH.'/wp-admin/includes/upgrade.php');
 	} else {
 		die('We had a problem finding your \'/wp-admin/upgrade-functions.php\' and \'/wp-admin/includes/upgrade.php\'');
@@ -60,7 +60,9 @@ function wpmusiclinks_create_tables() {
 															`name` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
 															`type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
 															`mb_id` varchar (20) NULL,
-															PRIMARY KEY (`id`)) $charset_collate;";
+															PRIMARY KEY (`id`),
+															CONSTRAINT uq_musiclink_name
+																UNIQUE (name, type)) $charset_collate;";
 	
 	$create_table['linksr'] = "CREATE TABLE $wpdb->musiclinksr (
 															`id` int(11) UNSIGNED NOT NULL,
@@ -68,15 +70,12 @@ function wpmusiclinks_create_tables() {
 															`link_value` varchar(150)  CHARACTER SET utf8 NOT NULL DEFAULT '',
 															PRIMARY KEY (`id`, `link_type`),
 														  CONSTRAINT fk_musiclinks_rel
-													    FOREIGN KEY (id)
-													    REFERENCES $wpdb->musiclinks (id)) $charset_collate;";
+														    FOREIGN KEY (id)
+														    REFERENCES $wpdb->musiclinks (id)) $charset_collate;";
 
 	maybe_create_table($wpdb->musiclinks, $create_table['links']);
 	maybe_create_table($wpdb->musiclinksr, $create_table['linksr']);	
 	
-
-	
-	return true;
 }
 
 
@@ -87,10 +86,11 @@ function wpmusiclinks_create_tables() {
  * @return boolean true if we already have the item in our database ($results != 0)
  */
 function wpmusiclinks_cache_check($name, $type)  {
-	$query = "SELECT COUNT(id) FROM $wpdb->musiclinks 
+	global $wpdb;
+	$query = "SELECT COUNT(*) FROM $wpdb->musiclinks 
 						WHERE `name` = '$name' AND `type` = '$type';";
-	$results = intval($wpdb->get_var($query));
-	return ($results != 0);
+	$results = $wpdb->get_var($query);
+	return ($results);
 }
 
 
@@ -171,7 +171,14 @@ function wpmusiclinks_add_menu() {
  * 
  */
 function wpmusiclinks_menu(){
+	global $wpdb;
 	echo "<p>Hi!</p>";
+	$query = "INSERT INTO $wpdb->musiclinks (name, type) VALUES ('Metallica', 'artist')";
+	$wpdb->query($query);
+	if (wpmusiclinks_cache_check("Metallica", "artist")) echo "<p>We have Metallica.</p>";
+	else echo "<p>No Metallica.</p>";
+	if (wpmusiclinks_cache_check("Iron Maiden", "artist")) echo "<p>We have Iron Maiden.</p>";
+	else echo "<p>No Iron Maiden.</p>";
 	
 }
 
