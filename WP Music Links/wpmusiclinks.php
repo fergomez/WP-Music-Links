@@ -3,19 +3,12 @@
 Plugin Name: WP Music Links
 Plugin URI: http://github.com/fergomez/wp-music-links
 Description: Adds links to social networks of artists and festivals easily in your posts.
+						 Usage: [musiclinks artist="name"], [musiclinks festival="name"].
 Version: 0.1
 Author: Fernando Gómez Pose
 Author URI: http://fergomez.es/
 License: GPL2
 */
-
-
-/**
- * File containing all the functions for the plugin.
- * Usage: [musiclinks artist="name"], [musiclinks festival="name"].
- * @author fergomez
- *
- */
 	
 /**
  * Creates (if they don't exist) the database tables for storing all the links retrieved from
@@ -38,29 +31,50 @@ License: GPL2
  *  @access private
  *  @return boolean false in case of problems 
  */	
-function wpmusiclinks_create_database() {
+function wpmusiclinks_create_tables() {
 	global $wpdb;
+	$wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
+	$wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
 	
-	$query = "CREATE TABLE IF NOT EXISTS `wp_" . $wp_prefix . "_musiclinks` ( 
-					  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, 
-						`name` varchar(100),
-						`type` varchar(50),
-						`mb_id` varchar (20),
-						PRIMARY KEY (`id`)		
-					)";
+	$charset_collate = '';
+	if($wpdb->supports_collation()) {
+		if(!empty($wpdb->charset)) {
+			$charset_collate = "DEFAULT CHARACTER SET $wpdb->charset";
+		}
+		if(!empty($wpdb->collate)) {
+			$charset_collate .= " COLLATE $wpdb->collate";
+		}
+	}
 	
-	// mysqli_query
+	if(@is_file(ABSPATH.'/wp-admin/upgrade-functions.php')) {
+		include_once(ABSPATH.'/wp-admin/upgrade-functions.php');
+	} elseif(@is_file(ABSPATH.'/wp-admin/includes/upgrade.php')) {
+		include_once(ABSPATH.'/wp-admin/includes/upgrade.php');
+	} else {
+		die('We had a problem finding your \'/wp-admin/upgrade-functions.php\' and \'/wp-admin/includes/upgrade.php\'');
+	}
 	
-	$query = "CREATE TABLE IF NOT EXISTS `wp_" . $wp_prefix . "_musiclinks_rel` (
-						`id` int(11) UNSIGNED NOT NULL,
-						`link_type` varchar(50),
-						`link_value` varchar(150)
-						PRIMARY KEY (`id`, `link_type`)		
-					)";
+	$create_table = array();
+	$create_table['links'] = "CREATE TABLE $wpdb->musiclinks ( 
+														  `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, 
+															`name` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
+															`type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
+															`mb_id` varchar (20) NULL,
+															PRIMARY KEY (`id`)) $charset_collate;";
 	
-	// mysqli_query
+	$create_table['linksr'] = "CREATE TABLE $wpdb->musiclinksr (
+															`id` int(11) UNSIGNED NOT NULL,
+															`link_type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
+															`link_value` varchar(150)  CHARACTER SET utf8 NOT NULL DEFAULT '',
+															PRIMARY KEY (`id`, `link_type`),
+														  CONSTRAINT fk_musiclinks_rel
+													    FOREIGN KEY (id)
+													    REFERENCES $wpdb->musiclinks (id)) $charset_collate;";
+
+	maybe_create_table($wpdb->musiclinks, $create_table['links']);
+	maybe_create_table($wpdb->musiclinksr, $create_table['linksr']);	
 	
-	// check if they exist
+
 	
 	return true;
 }
@@ -73,11 +87,10 @@ function wpmusiclinks_create_database() {
  * @return boolean true if we already have the item in our database ($results != 0)
  */
 function wpmusiclinks_cache_check($name, $type)  {
-	$query = "SELECT COUNT(*) FROM `wp_" . $wp_prefix . "_musiclinks` 
+	$query = "SELECT COUNT(id) FROM $wpdb->musiclinks 
 						WHERE `name` = '$name' AND `type` = '$type';";
-	$results = $wpdb->get_results($query);
-	
-	return ($results);
+	$results = intval($wpdb->get_var($query));
+	return ($results != 0);
 }
 
 
@@ -143,22 +156,28 @@ function wpmusiclinks_edit_info() {
 /**
  * Adds a menu for users.
  */
-function wpmusiclinks_menu() {
-	add_menu_page('WP Music Links', "WP Music Links", 8, basename(__file__), '', plugins_url('wpmusiclogo.png', __FILE__));
-	add_submenu_page(basename(__file__), 'WP Music Links Settings', "WP Music Links", 8, basename(__file__), "wpmusiclinks_option_menu");
+function wpmusiclinks_add_menu() {
+	if (function_exists('add_menu_page')) {
+		add_menu_page('WP Music Links', "WP Music Links", 8, basename(__file__), '', plugins_url('wpmusiclogo.png', __FILE__));
+	}
+	if (function_exists('add_submenu_page')) {
+		add_submenu_page(basename(__file__), 'WP Music Links Settings', "WP Music Links", 8, basename(__file__), "wpmusiclinks_menu");
+		
+	}
 }
+
 
 /**
  * 
  */
-function wpmusiclinks_option_menu(){
+function wpmusiclinks_menu(){
 	echo "<p>Hi!</p>";
 	
 }
 
-
+add_action('activate_wpmusiclinks.php', 'wpmusiclinks_create_tables');
 add_filter('the_content', 'wpmusiclinks_replace_shortcodes');
-add_action('admin_menu', 'wpmusiclinks_menu');
+add_action('admin_menu', 'wpmusiclinks_add_menu');
 
 // check permission
 ?>
