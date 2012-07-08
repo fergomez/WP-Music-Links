@@ -76,6 +76,11 @@ function wpmusiclinks_create_tables() {
 	maybe_create_table($wpdb->musiclinks, $create_table['links']);
 	maybe_create_table($wpdb->musiclinksr, $create_table['linksr']);	
 	
+	$query = "INSERT INTO $wpdb->musiclinks (name, type) VALUES ('Metallica', 'artist')";
+	$wpdb->query($query);
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value) VALUES
+						(1, 'facebook', 'https://www.facebook.com/metallica')";
+	$wpdb->query($query);
 }
 
 
@@ -102,6 +107,112 @@ function wpmusiclinks_get_info($name) {
 	// parse info and blabla
 }
 
+/**
+ * 
+ * @param string $name name of the item
+ * @param string $type type of the item (festival, artist...)
+ */
+function wpmusiclinks_get_value($name, $type, $val_type) {
+	global $wpdb;
+	if (wpmusiclinks_cache_check($name, $type)) {
+		$query = "SELECT link_value as val
+							FROM $wpdb->musiclinks m
+							JOIN $wpdb->musiclinksr r
+								ON m.id = r.id
+							WHERE m.name = '$name' AND
+										m.type = '$type' AND
+										r.link_type = '$val_type'
+							LIMIT 1;";
+		$results = $wpdb->get_results($query);
+		
+		if ($results) {
+			foreach ($results as $result) {
+				return $result->val;
+			}
+		} else return false;
+	} else return false;
+}
+
+
+/**
+ * Returns the facebook of one certain artist
+ * @param string $name name of the artist
+ * @return string return facebook link
+ */
+function wpmusiclinks_get_artist_facebook($name) {
+	return wpmusiclinks_get_value($name, "artist", "facebook");
+}
+
+
+/**
+ * Returns the twitter of one certain artist
+ * @param string $name name of the artist
+ * @return string return twitter link
+ */
+function wpmusiclinks_get_artist_twitter($name) {
+	return wpmusiclinks_get_value($name, "artist", "twitter");
+}
+
+
+/**
+ * Returns the official website of one certain artist
+ * @param string $name name of the artist
+ * @return string return website link
+ */
+function wpmusiclinks_get_artist_website($name) {
+	return wpmusiclinks_get_value($name, "artist", "website");
+}
+
+
+/**
+ * Returns the Last.fm profile of one certain artist
+ * @param string $name name of the artist
+ * @return string return Last.fm link
+ */
+function wpmusiclinks_get_artist_lastfm($name) {
+	return "http://last.fm/music/" . $name;
+}
+
+
+/**
+ * Returns the facebook of one certain festival
+ * @param string $name name of the festival
+ * @return string return facebook link
+ */
+function wpmusiclinks_get_festival_facebook($name) {
+	return wpmusiclinks_get_value($name, "festival", "facebook");
+}
+
+
+/**
+ * Returns the twitter of one certain festival
+ * @param string $name name of the festival
+ * @return string return twitter link
+ */
+function wpmusiclinks_get_festival_twitter($name) {
+	return wpmusiclinks_get_value($name, "festival", "twitter");
+}
+
+
+/**
+ * Returns the official website of one certain festival
+ * @param string $name name of the festival
+ * @return string return website link
+ */
+function wpmusiclinks_get_festival_website($name) {
+	return wpmusiclinks_get_value($name, "festival", "website");
+}
+
+
+/**
+ * Returns the Last.fm profile of one certain festival
+ * @param string $name name of the festival
+ * @return string return Last.fm link
+ */
+function wpmusiclinks_get_festival_lastfm($name) {
+	return wpmusiclinks_get_value($name, "festival", "lastfm");
+}
+
 
 /**
  * Generates the HTML links
@@ -110,9 +221,31 @@ function wpmusiclinks_get_info($name) {
  * @return string the HTML code for the links or an empty string in case of error
  */
 function wpmusiclinks_get_links($name, $type) {
-	// get item info from database
-	// in case it's not found, we get it from MusicBrainz
-	// in case we don't find anything in MusicBrainz, we return an empty string
+	global $wpdb;
+	if (wpmusiclinks_cache_check($name, $type)) {
+		$query = "SELECT link_type as type, link_value as val
+							FROM $wpdb->musiclinks m
+							JOIN $wpdb->musiclinksr r
+								ON m.id = r.id
+							WHERE m.name = '$name' AND
+										m.type = '$type';";
+		$results = $wpdb->get_results($query);
+		
+		if ($results) {
+			$links = "<strong>$name</strong>: ";
+			// sort links as desired
+			foreach ($results as $result) {
+				$type = ucfirst($result->type); 
+				$links	.= '<a href="' . $result->val . '" title="' . $type . '">' . $type . '</a> ';
+			}
+			return $links;
+		} 
+	}
+	// if not found
+	if ($type == "artist") {
+		wpmusiclinks_get_info($name, $type);
+		return wpmusiclinks_get_links($name, $type);
+	} else return "";
 }
 
 
@@ -131,7 +264,6 @@ function wpmusiclinks_replace_shortcodes($post) {
 } 
 
 
-
 /**
  * Parses old links from older posts and stores the information in our database
  * @param string $html the HTML code from the links from previous posts
@@ -140,6 +272,7 @@ function wpmusiclinks_parse_existing_links($html) {
 	// we get the website, facebook and twitter
 }
 
+
 /**
  * Form where we can add manually (inside WordPress) the information for an artist, festival...
  */
@@ -147,44 +280,49 @@ function wpmusiclinks_add_info_manually() {
 	
 }
 
+
 /**
  * Form where we can edit manually (inside WordPress) the information for an artist, festival...
  */
 function wpmusiclinks_edit_info() {
 }
 
+
 /**
- * Adds a menu for users.
+ * Adds a menu in our dashboard for allowed users.
  */
 function wpmusiclinks_add_menu() {
 	if (function_exists('add_menu_page')) {
 		add_menu_page('WP Music Links', "WP Music Links", 8, basename(__file__), '', plugins_url('wpmusiclogo.png', __FILE__));
 	}
 	if (function_exists('add_submenu_page')) {
-		add_submenu_page(basename(__file__), 'WP Music Links Settings', "WP Music Links", 8, basename(__file__), "wpmusiclinks_menu");
+		add_submenu_page(basename(__file__), 'WP Music Links Settings', "WP Music Links", 8, basename(__file__), "wpmusiclinks_desktop");
 		
 	}
 }
 
 
 /**
- * 
+ * Shows our info in our plugin section.
  */
-function wpmusiclinks_menu(){
+function wpmusiclinks_desktop(){
 	global $wpdb;
 	echo "<p>Hi!</p>";
-	$query = "INSERT INTO $wpdb->musiclinks (name, type) VALUES ('Metallica', 'artist')";
-	$wpdb->query($query);
-	if (wpmusiclinks_cache_check("Metallica", "artist")) echo "<p>We have Metallica.</p>";
+	if (wpmusiclinks_cache_check("Metallica", "artist")) echo '<p>We have Metallica. Facebook: <a href="' . wpmusiclinks_get_artist_facebook("Metallica") . '">Facebook</a></p>';
 	else echo "<p>No Metallica.</p>";
 	if (wpmusiclinks_cache_check("Iron Maiden", "artist")) echo "<p>We have Iron Maiden.</p>";
 	else echo "<p>No Iron Maiden.</p>";
+	echo "<p>Facebook: " . wpmusiclinks_get_artist_facebook("Iron Maiden") . "</p>";
+	echo wpmusiclinks_get_links("Metallica", "artist");
 	
 }
 
+// creates tables when activating the plugin
 add_action('activate_wpmusiclinks.php', 'wpmusiclinks_create_tables');
+// replaces the shortcodes in our content
 add_filter('the_content', 'wpmusiclinks_replace_shortcodes');
+// adds the plugin menu to the admin menu
 add_action('admin_menu', 'wpmusiclinks_add_menu');
 
-// check permission
+// check permissions?
 ?>
