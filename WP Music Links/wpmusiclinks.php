@@ -72,6 +72,7 @@ function wpmusiclinks_create_tables() {
 															`id` int(11) UNSIGNED NOT NULL,
 															`link_type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
 															`link_value` varchar(150)  CHARACTER SET utf8 NOT NULL DEFAULT '',
+															`link_order` int(11) UNSIGNED,
 															PRIMARY KEY (`id`, `link_type`),
 														  CONSTRAINT fk_musiclinks_rel
 														    FOREIGN KEY (id)
@@ -82,8 +83,17 @@ function wpmusiclinks_create_tables() {
 	
 	$query = "INSERT INTO $wpdb->musiclinks (name, type) VALUES ('Metallica', 'artist')";
 	$wpdb->query($query);
-	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value) VALUES
-						(1, 'facebook', 'https://www.facebook.com/metallica')";
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
+						(1, 'website', 'https://www.metallica.com', 1)";
+	$wpdb->query($query);
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
+						(1, 'facebook', 'https://www.facebook.com/metallica', 2)";
+	$wpdb->query($query);
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
+						(1, 'twitter', 'https://www.twitter.com/metallica', 3)";
+	$wpdb->query($query);
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
+						(1, 'lastfm', 'http://last.fm/music/metallica', 4)";
 	$wpdb->query($query);
 }
 
@@ -109,6 +119,8 @@ function wpmusiclinks_cache_check($name, $type)  {
  */
 function wpmusiclinks_get_info($name) {
 	// parse info and blabla
+	
+	$lastfm = "http://last.fm/music" . $name;
 }
 
 
@@ -175,7 +187,7 @@ function wpmusiclinks_get_artist_website($name) {
  * @return string return Last.fm link
  */
 function wpmusiclinks_get_artist_lastfm($name) {
-	return "http://last.fm/music/" . $name;
+	return wpmusiclinks_get_value($name, "artist", "lastfm");
 }
 
 
@@ -233,7 +245,8 @@ function wpmusiclinks_get_links($name, $type) {
 							JOIN $wpdb->musiclinksr r
 								ON m.id = r.id
 							WHERE m.name = '$name' AND
-										m.type = '$type';";
+										m.type = '$type' 
+							ORDER BY r.link_order ASC;";
 		$results = $wpdb->get_results($query);
 		
 		if ($results) {
@@ -243,15 +256,16 @@ function wpmusiclinks_get_links($name, $type) {
 				$type = ucfirst($result->type); 
 				$links	.= '<a href="' . $result->val . '" title="' . $type . '">' . $type . '</a> | ';
 			}
-			//$links = substr($links, 0, strlen($links) - 4);
-			$links .= '<a href="' . wpmusiclinks_get_artist_lastfm($name) . '" title="Last.fm">Last.fm</a>';
+			$links = substr($links, 0, strlen($links) - 4);
 			return $links;
 		} 
 	}
 	// if not found
 	if ($type == "artist") {
 		wpmusiclinks_get_info($name, $type);
-		return wpmusiclinks_get_links($name, $type);
+		//return wpmusiclinks_get_links($name, $type);
+		// infinite loop; for now on
+		return "";
 	} else return "";
 }
 
@@ -283,7 +297,7 @@ function wpmusiclinks_parse_existing_links($html) {
  * Form where we can add manually (inside WordPress) the information for an artist, festival...
  */
 function wpmusiclinks_add_info_manually() { ?>
-	<form method="post" action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>">
+	<form method="post" action="<?php echo admin_url('admin.php?page=2'.plugin_basename(__FILE__)); ?>">
 	<?php //wp_nonce_field('wp-polls_add-poll'); ?>
 	<div class="wrap">
 		<h2><?php _e('Add Item', 'wpmusiclinks'); ?></h2>
@@ -309,7 +323,27 @@ function wpmusiclinks_add_info_manually() { ?>
 /**
  * Form where we can edit manually (inside WordPress) the information for an artist, festival...
  */
-function wpmusiclinks_edit_info() {
+function wpmusiclinks_edit_info() { ?>
+	<form method="post" action="<?php echo admin_url('admin.php?page=3'.plugin_basename(__FILE__)); ?>">
+	<?php //wp_nonce_field('wp-polls_add-poll'); ?>
+	<div class="wrap">
+		<h2><?php _e('Edit Item', 'wpmusiclinks'); ?></h2>
+		<h3><?php _e('Item information', 'wpmusiclinks'); ?></h3>
+		<table class="form-table">
+			<tr>
+				<th width="20%" scope="row" valign="top"><?php _e('Item name', 'wpmusiclinks') ?></th>
+				<td width="80%"><input type="text" size="70" name="wpmusiclinks_name" value="" /></td>
+			</tr>
+			<tr>
+				<th width="20%" scope="row" valign="top"><?php _e('Item type', 'wpmusiclinks') ?></th>
+				<td width="80%"><input type="text" size="70" name="wpmusiclinks_type" value="" /></td>
+			</tr>			
+		</table>
+
+
+		<p style="text-align: center;"><input type="submit" name="do" value="<?php _e('Edit Item', 'wpmusiclinks'); ?>"  class="button-primary" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wpmusiclinks'); ?>" class="button" onclick="javascript:history.go(-1)" /></p>
+	</div>
+	</form>	<?
 	
 }
 
@@ -336,6 +370,7 @@ function wpmusiclinks_desktop(){
 	global $wpdb;
 	echo "<p>Hi!</p>";
 	echo wpmusiclinks_get_links("Metallica", "artist");
+	echo wpmusiclinks_get_links("Megadeth", "artist");
 	
 }
 
