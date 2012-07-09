@@ -82,20 +82,15 @@ function wpmusiclinks_create_tables() {
    maybe_create_table($wpdb->musiclinks, $create_table['links']);
    maybe_create_table($wpdb->musiclinksr, $create_table['linksr']);   
    
-   $query = "INSERT INTO $wpdb->musiclinks (name, type) VALUES ('Metallica', 'artist')";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-                  (1, 'website', 'Official website', 'https://www.metallica.com', 1)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-                  (1, 'facebook', 'Facebook', 'https://www.facebook.com/metallica', 2)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-                  (1, 'twitter', 'Twitter', 'https://www.twitter.com/metallica', 3)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-                  (1, 'lastfm', 'Last.fm', 'http://last.fm/music/metallica', 4)";
-   $wpdb->query($query);
+   // we add one example to our database
+   $name = 'Metallica';
+   $website = 'http://www.metallica.com';
+   $facebook = 'https://www.facebook.com/metallica';
+   $twitter = 'https://www.twitter.com/metallica';
+   $lastfm = 'http://last.fm/music/metallica';
+   
+   wpmusiclinks_add_artist($name, '', $website, $facebook, $twitter, $lastfm);
+   
 }
 
 
@@ -110,7 +105,23 @@ function wpmusiclinks_cache_check($name, $type)  {
    $query = "SELECT COUNT(*) FROM $wpdb->musiclinks 
                   WHERE `name` = '$name' AND `type` = '$type';";
    $results = $wpdb->get_var($query);
-   return ($results);
+   return ($results!=0);
+}
+
+
+/**
+ * 
+ * @param unknown_type $artist
+ */
+function wpmusiclinks_get_mbid($artist) {
+   $xml = @simplexml_load_file('http://musicbrainz.org/ws/2/artist/?query=artist:' . $artist);
+   foreach($xml->{'artist-list'} as $artistlist) {
+      foreach($artistlist->artist as $artistinfo) {
+         $mbid = $artistinfo['id'];
+         return $mbid;
+      }
+   }
+   return "";
 }
 
 
@@ -119,11 +130,64 @@ function wpmusiclinks_cache_check($name, $type)  {
  * @param string $name name of artist
  */
 function wpmusiclinks_get_info($name) {
-   // parse info and blabla
+   require_once('simple_html_dom.php');
    
-   $lastfm = "http://last.fm/music" . $name;
+   $mbid = wpmusiclinks_get_mbid($name);
+   $url = "http://musicbrainz.org/artist/" . $mbid;
+   
+   $html = @file_get_html($url);
+   
+   $twitter = "";
+   $facebook = "";
+   $website = "";
+   
+   foreach($html->find('ul.external_links li') as $a) {
+      if ($a->class == "twitter") $twitter = $a->first_child()->href;
+      elseif ($a->class == "facebook") $facebook = $a->first_child()->href;
+      elseif ($a->class == "home") $website = $a->first_child()->href;
+   }
+      
+   $lastfm = "http://last.fm/music/" . $name;
+   echo " TW: " . $twitter;
+   echo " FB: " . $facebook;
+   echo " Web: " . $website;
+   
+   wpmusiclinks_add_artist($name, '', $website, $facebook, $twitter, $lastfm);
+    
 }
 
+/**
+ * Adds an artist with its information on our database
+ * @param string $name Name of the artist
+ * @param string $website Website of the artist
+ * @param string $facebook Facebook of the artist
+ * @param string $twitter Twitter of the artist
+ * @param string $lastfm Last.fm profile of the artist
+ */
+function wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm) {
+   global $wpdb;
+   
+   $wpdb->insert($wpdb->musiclinks, 
+            array ('name' => $name,
+                   'type' => 'artist'),
+            array ('%s', '%s')
+            );
+   
+   $lastid = $wpdb->insert_id;
+   
+   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+   ($lastid, 'website', 'Official website', '$website', 1)";
+   $wpdb->query($query);
+   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+   ($lastid, 'facebook', 'Facebook', '$facebook', 2)";
+   $wpdb->query($query);
+   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+   ($lastid, 'twitter', 'Twitter', '$twitter', 3)";
+   $wpdb->query($query);
+   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+   ($lastid, 'lastfm', 'Last.fm', '$lastfm', 4)";
+   $wpdb->query($query);
+}
 
 /**
  * 
@@ -255,12 +319,10 @@ function wpmusiclinks_get_links($name, $type) {
          foreach ($results as $result) {
             $links   .= '<a href="' . $result->val . '" title="' . $result->name . '">' . $result->name . '</a> | ';
          }
-         $links = substr($links, 0, strlen($links) - 4);
+         $links = substr($links, 0, strlen($links) - 3);
          return $links;
       } 
-   }
-   // if not found
-   if ($type == "artist") {
+   } elseif ($type == "artist") {
       wpmusiclinks_get_info($name, $type);
       //return wpmusiclinks_get_links($name, $type);
       // infinite loop; for now on
@@ -368,8 +430,9 @@ function wpmusiclinks_add_menu() {
 function wpmusiclinks_desktop(){
    global $wpdb;
    echo "<p>Hi!</p>";
-   echo wpmusiclinks_get_links("Metallica", "artist");
-   echo wpmusiclinks_get_links("Megadeth", "artist");
+   //echo wpmusiclinks_get_links("Metallica", "artist");
+   //echo wpmusiclinks_get_links("Megadeth", "artist");
+   wpmusiclinks_get_info("Muse");
    
 }
 
