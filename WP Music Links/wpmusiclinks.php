@@ -447,13 +447,39 @@ function wpmusiclinks_add_menu() {
 
 
 /**
- * Shows our info in our plugin section.
+ * Returns the number of items already in our database
+ * @return int Number of items added into our database
+ */
+function wpmusiclinks_get_num_items() {
+   global $wpdb;
+   
+   $query = "SELECT COUNT(*) FROM $wpdb->musiclinks;";
+   $num = $wpdb->get_var($query);
+   return $num;
+}
+
+
+/**
+ * Shows our desktop in our plugin section.
  */
 function wpmusiclinks_desktop(){
    global $wpdb;
-   echo "<p><h2>Hi!</h2></p>";
-   echo "<p>What you wanna do?</p>";
-   echo "<p><ul><li><a href=".">Add Item</a></li><li>Edit item</li></ul></p>";
+   echo "<p><h2>WP Music Links Desktop</h2></p>";
+   echo "<p>Hi! We have now " . wpmusiclinks_get_num_items() . " items. Thanks for contributing!</p>";
+   $last_items = $wpdb->get_results("SELECT *
+                                     FROM $wpdb->musiclinks
+                                     ORDER BY id DESC
+                                     LIMIT 5");
+   if ($last_items) {
+      echo "<p><h3>Last added items:</h3></p>";
+      echo "<p><ul>";
+      foreach ($last_items as $item) {
+         echo "<li>" . $item->name . "</li>";
+      }
+      echo "</ul></p>";
+   }
+   echo "<p>What else you wanna do?</p>";
+   echo "<p><ul><li><a href=".">Add Item</a></li><li><a href=".">Edit item</a></li></ul></p>";
    
 }
 
