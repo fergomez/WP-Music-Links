@@ -318,7 +318,8 @@ function wpmusiclinks_get_links($name, $type) {
       if ($results) {
          $links = "<div class=\"wpmusiclinks\"><strong>$name</strong>: ";
          foreach ($results as $result) {
-            $links   .= '<a href="' . $result->val . '" title="' . $result->name . '">' . $result->name . '</a> | ';
+            if (!empty($result->val))
+               $links   .= '<a href="' . $result->val . '" title="' . $result->name . '">' . $result->name . '</a> | ';
          }
          $links = substr($links, 0, strlen($links) - 3) . "</div>";
          return $links;
