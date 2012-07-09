@@ -71,6 +71,7 @@ function wpmusiclinks_create_tables() {
 	$create_table['linksr'] = "CREATE TABLE $wpdb->musiclinksr (
 															`id` int(11) UNSIGNED NOT NULL,
 															`link_type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
+															`link_type_name` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
 															`link_value` varchar(150)  CHARACTER SET utf8 NOT NULL DEFAULT '',
 															`link_order` int(11) UNSIGNED,
 															PRIMARY KEY (`id`, `link_type`),
@@ -83,17 +84,17 @@ function wpmusiclinks_create_tables() {
 	
 	$query = "INSERT INTO $wpdb->musiclinks (name, type) VALUES ('Metallica', 'artist')";
 	$wpdb->query($query);
-	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
-						(1, 'website', 'https://www.metallica.com', 1)";
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+						(1, 'website', 'Official website', 'https://www.metallica.com', 1)";
 	$wpdb->query($query);
-	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
-						(1, 'facebook', 'https://www.facebook.com/metallica', 2)";
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+						(1, 'facebook', 'Facebook', 'https://www.facebook.com/metallica', 2)";
 	$wpdb->query($query);
-	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
-						(1, 'twitter', 'https://www.twitter.com/metallica', 3)";
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+						(1, 'twitter', 'Twitter', 'https://www.twitter.com/metallica', 3)";
 	$wpdb->query($query);
-	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_value, link_order) VALUES
-						(1, 'lastfm', 'http://last.fm/music/metallica', 4)";
+	$query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
+						(1, 'lastfm', 'Last.fm', 'http://last.fm/music/metallica', 4)";
 	$wpdb->query($query);
 }
 
@@ -240,7 +241,7 @@ function wpmusiclinks_get_festival_lastfm($name) {
 function wpmusiclinks_get_links($name, $type) {
 	global $wpdb;
 	if (wpmusiclinks_cache_check($name, $type)) {
-		$query = "SELECT link_type as type, link_value as val
+		$query = "SELECT link_type_name as name, link_value as val
 							FROM $wpdb->musiclinks m
 							JOIN $wpdb->musiclinksr r
 								ON m.id = r.id
@@ -251,10 +252,8 @@ function wpmusiclinks_get_links($name, $type) {
 		
 		if ($results) {
 			$links = "<strong>$name</strong>: ";
-			// sort links as desired here, REMEMBER!
 			foreach ($results as $result) {
-				$type = ucfirst($result->type); 
-				$links	.= '<a href="' . $result->val . '" title="' . $type . '">' . $type . '</a> | ';
+				$links	.= '<a href="' . $result->val . '" title="' . $result->name . '">' . $result->name . '</a> | ';
 			}
 			$links = substr($links, 0, strlen($links) - 4);
 			return $links;
