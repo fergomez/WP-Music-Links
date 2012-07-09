@@ -63,7 +63,7 @@ function wpmusiclinks_create_tables() {
                               `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, 
                               `name` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
                               `type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                              `mb_id` varchar (20) NULL,
+                              `mbid` varchar (20) NULL,
                               PRIMARY KEY (`id`),
                               CONSTRAINT uq_musiclink_name
                                  UNIQUE (name, type)) $charset_collate;";
@@ -84,12 +84,13 @@ function wpmusiclinks_create_tables() {
    
    // we add one example to our database
    $name = 'Metallica';
+   $mbid = '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab';
    $website = 'http://www.metallica.com';
    $facebook = 'https://www.facebook.com/metallica';
    $twitter = 'https://www.twitter.com/metallica';
    $lastfm = 'http://last.fm/music/metallica';
    
-   wpmusiclinks_add_artist($name, '', $website, $facebook, $twitter, $lastfm);
+   wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm);
    
 }
 
@@ -148,11 +149,8 @@ function wpmusiclinks_get_info($name) {
    }
       
    $lastfm = "http://last.fm/music/" . $name;
-   echo " TW: " . $twitter;
-   echo " FB: " . $facebook;
-   echo " Web: " . $website;
    
-   wpmusiclinks_add_artist($name, '', $website, $facebook, $twitter, $lastfm);
+   wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm);
     
 }
 
@@ -169,8 +167,8 @@ function wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $l
    
    $wpdb->insert($wpdb->musiclinks, 
             array ('name' => $name,
-                   'type' => 'artist'),
-            array ('%s', '%s')
+                   'type' => 'artist',
+                   'mbid' => $mbid)
             );
    
    $lastid = $wpdb->insert_id;
