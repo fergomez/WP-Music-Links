@@ -13,8 +13,13 @@ License: GPL2
 global $wpdb;
 $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
 $wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
-   
-$plugin_path = 'wpmusiclinks.php';
+
+$mainfile_path = 'wpmusiclinks.php';
+$addfile_path = 'wpmusiclinks-add.php';
+$editfile_path = 'wpmusiclinks-edit.php';
+
+require_once($addfile_path);
+require_once($editfile_path);
 
 
 /**
@@ -40,6 +45,7 @@ $plugin_path = 'wpmusiclinks.php';
 function wpmusiclinks_create_tables() {   
    global $wpdb;
    
+   // collation
    $charset_collate = '';
    if($wpdb->supports_collation()) {
       if(!empty($wpdb->charset)) {
@@ -50,6 +56,7 @@ function wpmusiclinks_create_tables() {
       }
    }
    
+   // functions for creating the tables (maybe_create_table)
    if (@is_file(ABSPATH.'/wp-admin/upgrade-functions.php')) {
       include_once(ABSPATH.'/wp-admin/upgrade-functions.php');
    } elseif (@is_file(ABSPATH.'/wp-admin/includes/upgrade.php')) {
@@ -95,41 +102,6 @@ function wpmusiclinks_create_tables() {
 }
 
 
-
-/**
- * Adds an artist with its information on our database
- * @param string $name Name of the artist
- * @param string $website Website of the artist
- * @param string $facebook Facebook of the artist
- * @param string $twitter Twitter of the artist
- * @param string $lastfm Last.fm profile of the artist
- */
-function wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm) {
-   global $wpdb;
-    
-   $wpdb->insert($wpdb->musiclinks,
-            array ('name' => $name,
-                     'type' => 'artist',
-                     'mbid' => $mbid)
-   );
-    
-   $lastid = $wpdb->insert_id;
-    
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'website', 'Official website', '$website', 1)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'facebook', 'Facebook', '$facebook', 2)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'twitter', 'Twitter', '$twitter', 3)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'lastfm', 'Last.fm', '$lastfm', 4)";
-   $wpdb->query($query);
-}
-
-
 /**
  * Checks if an item already exists in our database or not
  * @param string $name name of item
@@ -144,51 +116,6 @@ function wpmusiclinks_cache_check($name, $type)  {
    return ($results!=0);
 }
 
-
-/**
- * Return the MusicBrainz id of a given artist
- * @param string $artist
- */
-function wpmusiclinks_get_mbid($artist) {
-   $xml = @simplexml_load_file('http://musicbrainz.org/ws/2/artist/?query=artist:' . $artist);
-   if (empty($xml)) die('');
-   foreach($xml->{'artist-list'} as $artistlist) {
-      foreach($artistlist->artist as $artistinfo) {
-         $mbid = $artistinfo['id'];
-         return $mbid;
-      }
-   }
-   return "";
-}
-
-
-/**
- * Gets the information from MusicBrainz API and stores it into our database.
- * @param string $name name of artist
- */
-function wpmusiclinks_get_info($name) {
-   require_once('simple_html_dom.php');
-   
-   $mbid = wpmusiclinks_get_mbid($name);
-   $url = "http://musicbrainz.org/artist/" . $mbid;
-   
-   $html = @file_get_html($url);
-   
-   $twitter = "";
-   $facebook = "";
-   $website = "";
-   
-   foreach($html->find('ul.external_links li') as $a) {
-      if ($a->class == "twitter") $twitter = $a->first_child()->href;
-      elseif ($a->class == "facebook") $facebook = $a->first_child()->href;
-      elseif ($a->class == "home") $website = $a->first_child()->href;
-   }
-      
-   $lastfm = "http://last.fm/music/" . $name;
-   
-   wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm);
-    
-}
 
 /**
  * Returns the asked value of a given item
@@ -298,6 +225,19 @@ function wpmusiclinks_get_festival_lastfm($name) {
 
 
 /**
+ * Returns the number of items already in our database
+ * @return int Number of items added into our database
+ */
+function wpmusiclinks_get_num_items() {
+   global $wpdb;
+    
+   $query = "SELECT COUNT(*) FROM $wpdb->musiclinks;";
+   $num = $wpdb->get_var($query);
+   return $num;
+}
+
+
+/**
  * Generates the HTML links
  * @param string $name name of the item
  * @param string $type type of the item
@@ -329,8 +269,6 @@ function wpmusiclinks_get_links($name, $type) {
       return wpmusiclinks_get_links($name, $type);
    } else return "";
 }
-
-
 
 
 /**
@@ -366,96 +304,19 @@ function wpmusiclinks_shortcode($atts) {
 } 
 
 
-
-/**
- * Parses old links from older posts and stores the information in our database
- * @param string $html the HTML code from the links from previous posts
- */
-function wpmusiclinks_parse_existing_links($html) {
-   // regex and we get the website, facebook and twitter
-}
-
-
-/**
- * Form where we can add manually (inside WordPress) the information for an artist, festival...
- */
-function wpmusiclinks_add_info_manually() { ?>
-   <form method="post" action="<?php echo admin_url('admin.php?page=2'.plugin_basename(__FILE__)); ?>">
-   <?php //wp_nonce_field('wp-polls_add-poll'); ?>
-   <div class="wrap">
-      <h2><?php _e('Add Item', 'wpmusiclinks'); ?></h2>
-      <h3><?php _e('Item information', 'wpmusiclinks'); ?></h3>
-      <table class="form-table">
-         <tr>
-            <th width="20%" scope="row" valign="top"><?php _e('Item name', 'wpmusiclinks') ?></th>
-            <td width="80%"><input type="text" size="70" name="wpmusiclinks_name" value="" /></td>
-         </tr>
-         <tr>
-            <th width="20%" scope="row" valign="top"><?php _e('Item type', 'wpmusiclinks') ?></th>
-            <td width="80%"><input type="text" size="70" name="wpmusiclinks_type" value="" /></td>
-         </tr>         
-      </table>
-
-
-      <p style="text-align: center;"><input type="submit" name="do" value="<?php _e('Add Item', 'wpmusiclinks'); ?>"  class="button-primary" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wpmusiclinks'); ?>" class="button" onclick="javascript:history.go(-1)" /></p>
-   </div>
-   </form>   <?
-}
-
-
-/**
- * Form where we can edit manually (inside WordPress) the information for an artist, festival...
- */
-function wpmusiclinks_edit_info() { ?>
-   <form method="post" action="<?php echo admin_url('admin.php?page=3'.plugin_basename(__FILE__)); ?>">
-   <?php //wp_nonce_field('wp-polls_add-poll'); ?>
-   <div class="wrap">
-      <h2><?php _e('Edit Item', 'wpmusiclinks'); ?></h2>
-      <h3><?php _e('Item information', 'wpmusiclinks'); ?></h3>
-      <table class="form-table">
-         <tr>
-            <th width="20%" scope="row" valign="top"><?php _e('Item name', 'wpmusiclinks') ?></th>
-            <td width="80%"><input type="text" size="70" name="wpmusiclinks_name" value="" /></td>
-         </tr>
-         <tr>
-            <th width="20%" scope="row" valign="top"><?php _e('Item type', 'wpmusiclinks') ?></th>
-            <td width="80%"><input type="text" size="70" name="wpmusiclinks_type" value="" /></td>
-         </tr>         
-      </table>
-
-
-      <p style="text-align: center;"><input type="submit" name="do" value="<?php _e('Edit Item', 'wpmusiclinks'); ?>"  class="button-primary" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wpmusiclinks'); ?>" class="button" onclick="javascript:history.go(-1)" /></p>
-   </div>
-   </form>   <?
-   
-}
-
-
 /**
  * Adds a menu in our dashboard for allowed users.
  */
 function wpmusiclinks_add_menu() {
    if (function_exists('add_menu_page')) {
-      add_menu_page('WP Music Links', "WP Music Links", 8, basename(__file__), '', plugins_url('wpmusiclogo.png', __FILE__));
+      $test = $plugin_path . $mainfile_path;
+      add_menu_page('WP Music Links', "WP Music Links", 8, 'wpmusiclinks/wpmusiclinks.php', '', plugins_url('wpmusiclinks/wpmusiclogo.png'));
    }
    if (function_exists('add_submenu_page')) {
-      add_submenu_page(basename(__file__), 'WP Music Links Desktop', "Desktop", 8, basename(__file__), "wpmusiclinks_desktop");
-      add_submenu_page(basename(__file__), 'WP Music Links Add Item', "Add Item", 8, '2' . basename(__file__) , "wpmusiclinks_add_info_manually");
-      add_submenu_page(basename(__file__), 'WP Music Links Edit Item', "Edit Item", 8, '3' . basename(__file__) , "wpmusiclinks_edit_info");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', 'WP Music Links Desktop', "Desktop", 8, 'wpmusiclinks/wpmusiclinks.php', "wpmusiclinks_desktop");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', 'WP Music Links Add Item', "Add Item", 8, 'wpmusiclinks/wpmusiclinks-add.php', "wpmusiclinks_add_info_manually");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', 'WP Music Links Edit Item', "Edit Item", 8, 'wpmusiclinks/wpmusiclinks-edit.php' , "wpmusiclinks_edit_info");
    }
-}
-
-
-/**
- * Returns the number of items already in our database
- * @return int Number of items added into our database
- */
-function wpmusiclinks_get_num_items() {
-   global $wpdb;
-   
-   $query = "SELECT COUNT(*) FROM $wpdb->musiclinks;";
-   $num = $wpdb->get_var($query);
-   return $num;
 }
 
 
@@ -478,8 +339,6 @@ function wpmusiclinks_desktop(){
       }
       echo "</ul></p>";
    }
-   echo "<p>What else you wanna do?</p>";
-   echo "<p><ul><li><a href=".">Add Item</a></li><li><a href=".">Edit item</a></li></ul></p>";
    
 }
 
@@ -487,7 +346,7 @@ function wpmusiclinks_desktop(){
 /**
  * creates tables when activating the plugin
  */
-add_action('activate_' . $plugin_path, 'wpmusiclinks_create_tables');
+add_action('activate_' . $plugin_path . $mainfile_path, 'wpmusiclinks_create_tables');
 
 /**
  * Shortcode replaced by links. [musiclinks type="name"]
