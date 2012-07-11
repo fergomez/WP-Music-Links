@@ -1,14 +1,7 @@
 <?php
-/*
- Plugin Name: WP Music Links
-Plugin URI: http://github.com/fergomez/wp-music-links
-Description: Adds links to social networks of artists and festivals easily in your posts.
-Usage: [musiclinks artist="name"], [musiclinks festival="name"].
-Version: 0.1
-Author: Fernando Gómez Pose
-Author URI: http://fergomez.es/
-License: GPL2
-*/
+/**
+ * Adding section of WP Music Links
+ */
 
 global $wpdb;
 $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
@@ -21,11 +14,10 @@ add_action('init', 'wpmusiclinks_lang');
  * @param string $artist
  */
 function wpmusiclinks_get_mbid($artist) {
-   $xml = simplexml_load_file("http://musicbrainz.org/ws/2/artist/?query=artist:" . urlencode($artist));
+   $xml = @simplexml_load_file("http://musicbrainz.org/ws/2/artist/?query=artist:" . urlencode($artist));
    if (empty($xml)) die('Problem with the xml');
    foreach($xml->{'artist-list'} as $artistlist) {
       foreach($artistlist->artist as $artistinfo) {
-         echo $artistinfo->name, " ", $artist, "<br />";
          if (str_replace("’", "'", $artistinfo->name) == $artist) {
             $mbid = $artistinfo['id'];
             return $mbid;
@@ -103,7 +95,7 @@ function wpmusiclinks_add_festival($name, $website, $facebook, $twitter, $lastfm
  */
 function wpmusiclinks_add_item($name, $type, $mbid, $website, $facebook, $twitter, $lastfm) {
    global $wpdb;
-   echo $name, $type, $mbid, $website, $facebook, $twitter, $lastfm;
+   
    if ($type!="artist") {
       $wpdb->insert($wpdb->musiclinks,
                array ('name' => $name,

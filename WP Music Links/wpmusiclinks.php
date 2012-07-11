@@ -93,7 +93,7 @@ function wpmusiclinks_create_tables() {
    // we add one hardcoded example to our database
    $name = 'Metallica';
    $mbid = '65f4f0c5-ef9e-490c-aee3-909e7ae6b2ab';
-   $website = 'http://www.metallica.com';
+   $website = 'http://www.metallica.com/';
    $facebook = 'https://www.facebook.com/metallica';
    $twitter = 'https://www.twitter.com/metallica';
    $lastfm = 'http://last.fm/music/metallica';
@@ -400,7 +400,7 @@ function wpmusiclinks_lang() {
 /**
  * creates tables when activating the plugin
  */
-add_action('activate_' . $plugin_path . $mainfile_path, 'wpmusiclinks_create_tables');
+add_action('activate_wpmusiclinks/wpmusiclinks.php', 'wpmusiclinks_create_tables');
 
 /**
  * Shortcode replaced by links. [musiclinks type="name"]
@@ -424,4 +424,6 @@ if ( file_exists( 'wpmusiclinks/languages/' . $locale . '.mo' ) ) {
    load_textdomain( 'wpmusiclinks', 'wpmusiclinks/languages/' . $locale . '.mo' );
 }
 // check permissions?
+// export file
+// import file, update the new ones
 ?>

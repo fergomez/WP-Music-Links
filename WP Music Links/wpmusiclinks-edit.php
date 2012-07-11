@@ -1,14 +1,7 @@
 <?php
-/*
- Plugin Name: WP Music Links
-Plugin URI: http://github.com/fergomez/wp-music-links
-Description: Adds links to social networks of artists and festivals easily in your posts.
-Usage: [musiclinks artist="name"], [musiclinks festival="name"].
-Version: 0.1
-Author: Fernando Gómez Pose
-Author URI: http://fergomez.es/
-License: GPL2
-*/
+/**
+ * Updating section of WP Music Links
+ */
 
 global $wpdb;
 $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
@@ -101,7 +94,7 @@ function wpmusiclinks_edit_info() {
    	// Decide What To Do
    	switch($_POST['do']) {
    	    case __('Select Item', 'wpmusiclinks'):
-   		   $name = addslashes(trim($_POST['wpmusiclinks_name']));
+   		   $name = str_replace("'", "’", addslashes(trim($_POST['wpmusiclinks_name'])));
    		   $type = addslashes(trim($_POST['wpmusiclinks_type']));
    		   
    		   if ($type == "artist") {
@@ -124,7 +117,7 @@ function wpmusiclinks_edit_info() {
    		   
    	       break;
    		case __('Edit Item', 'wpmusiclinks'):
-   			$name = addslashes(trim($_POST['wpmusiclinks_name']));
+   			$name = str_replace("'", "’", addslashes(trim($_POST['wpmusiclinks_name'])));
    			$type = addslashes(trim($_POST['wpmusiclinks_type']));
    			$mbid = addslashes(trim($_POST['wpmusiclinks_mbid']));
    			$website = addslashes(trim($_POST['wpmusiclinks_website']));
