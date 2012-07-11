@@ -14,6 +14,7 @@ global $wpdb;
 $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
 $wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
 
+add_action('init', 'wpmusiclinks_lang');
 
 /**
  * Returns the MusicBrainz id of a given artist
@@ -24,8 +25,10 @@ function wpmusiclinks_get_mbid($artist) {
    if (empty($xml)) die('');
    foreach($xml->{'artist-list'} as $artistlist) {
       foreach($artistlist->artist as $artistinfo) {
-         $mbid = $artistinfo['id'];
-         return $mbid;
+         if ($artistinfo->name == $artist) {
+            $mbid = $artistinfo['id'];
+            return $mbid;
+         }
       }
    }
    return "";
@@ -115,9 +118,9 @@ function wpmusiclinks_add_item($name, $type, $mbid, $website, $facebook, $twitte
    }
    
    $lastid = $wpdb->insert_id;
-
+   
    $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'website', " . __('Official website', 'wpmusiclinks') . ", '$website', 1)";
+   ($lastid, 'website', '" . __('Official website', 'wpmusiclinks') . "', '$website', 1)";
    $wpdb->query($query);
    $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
    ($lastid, 'facebook', 'Facebook', '$facebook', 2)";

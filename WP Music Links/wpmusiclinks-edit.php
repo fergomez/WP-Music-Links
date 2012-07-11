@@ -49,7 +49,7 @@ function wpmusiclinks_update_item($id, $type, $name, $mbid, $website, $facebook,
    $wpdb->query($query);
    
    $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($id, 'website', " . __('Official website', 'wpmusiclinks') . ", '$website', 1)";
+   ($id, 'website', '" . __('Official website', 'wpmusiclinks') . "', '$website', 1)";
    $wpdb->query($query);
    $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
    ($id, 'facebook', 'Facebook', '$facebook', 2)";
