@@ -125,14 +125,30 @@ function wpmusiclinks_cache_check($name, $type)  {
 function wpmusiclinks_get_value($name, $type, $val_type) {
    global $wpdb;
    if (wpmusiclinks_cache_check($name, $type)) {
-      $query = "SELECT link_value as val
-                FROM $wpdb->musiclinks m
-                JOIN $wpdb->musiclinksr r
-                   ON m.id = r.id
-                WHERE m.name = '$name' AND
-                      m.type = '$type' AND
-                      r.link_type = '$val_type'
-                LIMIT 1;";
+      if ($val_type == 'id') {
+         $query = "SELECT id as val
+                   FROM $wpdb->musiclinks
+                   WHERE name = '$name' AND
+                         type = '$type'
+                   LIMIT 1;";
+      } elseif ($val_type == "mbid") {
+         $query = "SELECT mbid as val
+                   FROM $wpdb->musiclinks
+                   WHERE name = '$name' AND
+                         type = 'artist'
+                   LIMIT 1;";
+
+      } else {
+         $query = "SELECT link_value as val
+                   FROM $wpdb->musiclinks m
+                   JOIN $wpdb->musiclinksr r
+                      ON m.id = r.id
+                   WHERE m.name = '$name' AND
+                         m.type = '$type' AND
+                         r.link_type = '$val_type'
+                   LIMIT 1;";
+      }
+      
       $results = $wpdb->get_results($query);
       
       if ($results) {
@@ -141,6 +157,34 @@ function wpmusiclinks_get_value($name, $type, $val_type) {
          }
       } else return false;
    } else return false;
+}
+
+
+/**
+ * 
+ * @param string $name Name of the item
+ */
+function wpmusiclinks_get_artist_id($name) {
+   return wpmusiclinks_get_value($name, "artist", 'id');   
+}
+
+
+/**
+ * 
+ * @param string $name Name of the festival
+ */
+function wpmusiclinks_get_festival_id($name) {
+   return wpmusiclinks_get_value($name, "festival", 'id');   
+}
+
+
+/**
+ * Returns the Music Brainz ID of one certain artist
+ * @param string $name name of the artist
+ * @return string return the MB ID
+ */
+function wpmusiclinks_get_artist_mbid($name) {
+   return wpmusiclinks_get_value($name, "artist", "mbid");
 }
 
 

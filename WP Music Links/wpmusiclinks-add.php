@@ -4,7 +4,6 @@ global $wpdb;
 $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
 $wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
 
-$base_page = 'admin.php?page=wpmusiclinks/wpmusiclinks.php';
 
 /**
  * Returns the MusicBrainz id of a given artist
@@ -141,7 +140,6 @@ function wpmusiclinks_add_info_manually() {
    if(!empty($_POST['do'])) {
    	// Decide What To Do
    	switch($_POST['do']) {
-   			// Add Poll
    		case __('Add Item', 'wpmusiclinks'):
    			$name = addslashes(trim($_POST['wpmusiclinks_name']));
    			$type = addslashes(trim($_POST['wpmusiclinks_type']));
@@ -151,8 +149,6 @@ function wpmusiclinks_add_info_manually() {
    			$twitter = addslashes(trim($_POST['wpmusiclinks_twitter']));
    			$lastfm = addslashes(trim($_POST['wpmusiclinks_lastfm']));
    			if (empty($lastfm) && $type="artist") $lastfm = "http://last.fm/music/" . $name;
-   			
-   
    			
    			// yes, I'm omitting the order right now... sorry for it! I'll fix it later, promised.
    			if ($type == "artist") 
@@ -211,7 +207,7 @@ function wpmusiclinks_add_info_manually() {
    	</table>
    	
    	
-   	<p><em>Yes, order is disabled so far. It will be like this until I change it. My apologies...</em></p>
+   	<p><em><?php _e('Yes, order is disabled so far. It will be like this until I change it. My apologies...', 'wpmusiclinks') ?></em></p>
    
    	<p style="text-align: center;"><input type="submit" name="do" value="<?php _e('Add Item', 'wpmusiclinks'); ?>"  class="button-primary" />&nbsp;&nbsp;<input type="button" name="cancel" value="<?php _e('Cancel', 'wpmusiclinks'); ?>" class="button" onclick="javascript:history.go(-1)" /></p>
    </div>
