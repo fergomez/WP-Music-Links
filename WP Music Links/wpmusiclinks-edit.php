@@ -20,7 +20,6 @@ require_once($addfile_path);
  * @param string $lastfm Last.fm profile of the item
  */
 function wpmusiclinks_update_item($id, $type, $name, $mbid, $website, $facebook, $twitter, $lastfm) {
-   echo $id, $type, $name, $mbid, $website, $facebook, $twitter, $lastfm;
    global $wpdb;   
    if ($type!="artist") {
       $wpdb->update($wpdb->musiclinks,
@@ -35,6 +34,7 @@ function wpmusiclinks_update_item($id, $type, $name, $mbid, $website, $facebook,
                array ('id' => $id));
    }
    
+   // I feel very bad for this, but "update" was giving me tons of problems. This is just temporary. Promised   
    $query = "DELETE FROM $wpdb->musiclinksr WHERE id=" . $id;
    $wpdb->query($query);
    
