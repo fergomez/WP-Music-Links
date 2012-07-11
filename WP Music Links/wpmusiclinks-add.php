@@ -1,4 +1,14 @@
 <?php
+/*
+ Plugin Name: WP Music Links
+Plugin URI: http://github.com/fergomez/wp-music-links
+Description: Adds links to social networks of artists and festivals easily in your posts.
+Usage: [musiclinks artist="name"], [musiclinks festival="name"].
+Version: 0.1
+Author: Fernando Gómez Pose
+Author URI: http://fergomez.es/
+License: GPL2
+*/
 
 global $wpdb;
 $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
@@ -27,7 +37,7 @@ function wpmusiclinks_get_mbid($artist) {
  * @param string $name name of artist
  */
 function wpmusiclinks_get_info($name) {
-   require_once('simple_html_dom.php');
+   require_once('simple_html_dom/simple_html_dom.php');
     
    $mbid = wpmusiclinks_get_mbid($name);
    $url = "http://musicbrainz.org/artist/" . $mbid;
@@ -107,7 +117,7 @@ function wpmusiclinks_add_item($name, $type, $mbid, $website, $facebook, $twitte
    $lastid = $wpdb->insert_id;
 
    $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'website', 'Official website', '$website', 1)";
+   ($lastid, 'website', " . __('Official website', 'wpmusiclinks') . ", '$website', 1)";
    $wpdb->query($query);
    $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
    ($lastid, 'facebook', 'Facebook', '$facebook', 2)";

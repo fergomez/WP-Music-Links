@@ -354,12 +354,12 @@ function wpmusiclinks_shortcode($atts) {
 function wpmusiclinks_add_menu() {
    if (function_exists('add_menu_page')) {
       $test = $plugin_path . $mainfile_path;
-      add_menu_page('WP Music Links', "WP Music Links", 8, 'wpmusiclinks/wpmusiclinks.php', '', plugins_url('wpmusiclinks/wpmusiclogo.png'));
+      add_menu_page('WP Music Links', "WP Music Links", 8, 'wpmusiclinks/wpmusiclinks.php', '', plugins_url('wpmusiclinks/img/wpmusiclogo.png'));
    }
    if (function_exists('add_submenu_page')) {
-      add_submenu_page('wpmusiclinks/wpmusiclinks.php', 'WP Music Links Desktop', "Desktop", 8, 'wpmusiclinks/wpmusiclinks.php', "wpmusiclinks_desktop");
-      add_submenu_page('wpmusiclinks/wpmusiclinks.php', 'WP Music Links Add Item', "Add Item", 8, 'wpmusiclinks/wpmusiclinks-add.php', "wpmusiclinks_add_info_manually");
-      add_submenu_page('wpmusiclinks/wpmusiclinks.php', 'WP Music Links Edit Item', "Edit Item", 8, 'wpmusiclinks/wpmusiclinks-edit.php' , "wpmusiclinks_edit_info");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Desktop', 'wpmusiclinks'), __('Desktop', 'wpmusiclinks'), 8, 'wpmusiclinks/wpmusiclinks.php', "wpmusiclinks_desktop");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Add Item', 'wpmusiclinks'), __('Add Item', 'wpmusiclinks'), 8, 'wpmusiclinks/wpmusiclinks-add.php', "wpmusiclinks_add_info_manually");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Edit Item', 'wpmusiclinks'), __('Edit Item', 'wpmusiclinks'), 8, 'wpmusiclinks/wpmusiclinks-edit.php' , "wpmusiclinks_edit_info");
    }
 }
 
@@ -369,21 +369,31 @@ function wpmusiclinks_add_menu() {
  */
 function wpmusiclinks_desktop(){
    global $wpdb;
+   
+   echo '<div id="icon-wpmusiclinks" class="icon32" style="background: transparent url(\'../wp-content/plugins/wpmusiclinks/img/wpmusiclogo32.png\') no-repeat;}"><br /></div>';
    echo "<p><h2>WP Music Links Desktop</h2></p>";
-   echo "<p>Hi! We have now " . wpmusiclinks_get_num_items() . " items. Thanks for contributing!</p>";
+   echo "<p>". _e('Hi!', 'wpmusiclinks') . sprintf(__(' We have now %s items. Thanks for contributing!', 'wpmusiclinks'), wpmusiclinks_get_num_items()) . "</p>";  
+   
    $last_items = $wpdb->get_results("SELECT *
                                      FROM $wpdb->musiclinks
                                      ORDER BY id DESC
                                      LIMIT 5");
    if ($last_items) {
-      echo "<p><h3>Last added items:</h3></p>";
-      echo "<p><ul>";
+      echo "<p><h3>" . __('Last added items:', 'wpmusiclinks') . "</h3></p>";
+      echo "<p><blockquote><ul>";
       foreach ($last_items as $item) {
          echo "<li>" . $item->name . "</li>";
       }
-      echo "</ul></p>";
+      echo "</ul></blockquote></p>";
    }
    
+}
+
+/**
+ * Loads the translations
+ */
+function wpmusiclinks_lang() {
+   load_plugin_textdomain('wpmusiclinks', false, 'wpmusiclinks/languages' );
 }
 
 
@@ -403,5 +413,15 @@ add_shortcode('musiclinks', 'wpmusiclinks_shortcode');
  */
 add_action('admin_menu', 'wpmusiclinks_add_menu');
 
+/**
+ * Internationalization
+ */
+
+add_action('init', 'wpmusiclinks_lang');
+
+$locale = get_locale();
+if ( file_exists( 'wpmusiclinks/languages/' . $locale . '.mo' ) ) {
+   load_textdomain( 'wpmusiclinks', 'wpmusiclinks/languages/' . $locale . '.mo' );
+}
 // check permissions?
 ?>
