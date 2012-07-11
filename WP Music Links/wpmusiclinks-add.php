@@ -21,11 +21,12 @@ add_action('init', 'wpmusiclinks_lang');
  * @param string $artist
  */
 function wpmusiclinks_get_mbid($artist) {
-   $xml = @simplexml_load_file('http://musicbrainz.org/ws/2/artist/?query=artist:' . $artist);
-   if (empty($xml)) die('');
+   $xml = simplexml_load_file("http://musicbrainz.org/ws/2/artist/?query=artist:" . urlencode($artist));
+   if (empty($xml)) die('Problem with the xml');
    foreach($xml->{'artist-list'} as $artistlist) {
       foreach($artistlist->artist as $artistinfo) {
-         if ($artistinfo->name == $artist) {
+         echo $artistinfo->name, " ", $artist, "<br />";
+         if (str_replace("’", "'", $artistinfo->name) == $artist) {
             $mbid = $artistinfo['id'];
             return $mbid;
          }
@@ -44,7 +45,7 @@ function wpmusiclinks_get_info($name) {
     
    $mbid = wpmusiclinks_get_mbid($name);
    $url = "http://musicbrainz.org/artist/" . $mbid;
-    
+   $name = str_replace("'", "’", $name);
    $html = @file_get_html($url);
     
    $twitter = "";
@@ -57,8 +58,7 @@ function wpmusiclinks_get_info($name) {
       elseif ($a->class == "home") $website = $a->first_child()->href;
    }
 
-   $lastfm = "http://last.fm/music/" . $name;
-    
+   $lastfm = "http://last.fm/music/" . $name; 
    wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm);
 
 }
@@ -103,7 +103,7 @@ function wpmusiclinks_add_festival($name, $website, $facebook, $twitter, $lastfm
  */
 function wpmusiclinks_add_item($name, $type, $mbid, $website, $facebook, $twitter, $lastfm) {
    global $wpdb;
-   
+   echo $name, $type, $mbid, $website, $facebook, $twitter, $lastfm;
    if ($type!="artist") {
       $wpdb->insert($wpdb->musiclinks,
                array ('name' => $name,
@@ -119,18 +119,38 @@ function wpmusiclinks_add_item($name, $type, $mbid, $website, $facebook, $twitte
    
    $lastid = $wpdb->insert_id;
    
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'website', '" . __('Official website', 'wpmusiclinks') . "', '$website', 1)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'facebook', 'Facebook', '$facebook', 2)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'twitter', 'Twitter', '$twitter', 3)";
-   $wpdb->query($query);
-   $query = "INSERT INTO $wpdb->musiclinksr (id, link_type, link_type_name, link_value, link_order) VALUES
-   ($lastid, 'lastfm', 'Last.fm', '$lastfm', 4)";
-   $wpdb->query($query);
+   $wpdb->insert($wpdb->musiclinksr,
+               array ('id' => $lastid,
+                      'link_type' => 'website',
+                      'link_type_name' => __('Official website', 'wpmusiclinks'),
+                      'link_value' => $website,
+                      'link_order' => '1')
+            );
+   $wpdb->insert($wpdb->musiclinksr,
+            array ('id' => $lastid,
+                     'link_type' => 'facebook',
+                     'link_type_name' => 'Facebook',
+                     'link_value' => $facebook,
+                     'link_order' => '2')
+   );
+
+   $wpdb->insert($wpdb->musiclinksr,
+            array ('id' => $lastid,
+                     'link_type' => 'twitter',
+                     'link_type_name' => 'Twitter',
+                     'link_value' => $twitter,
+                     'link_order' => '3')
+   );
+
+   $wpdb->insert($wpdb->musiclinksr,
+            array ('id' => $lastid,
+                     'link_type' => 'lastfm',
+                     'link_type_name' => 'Last.fm',
+                     'link_value' => $lastfm,
+                     'link_order' => '4')
+   );
+       
+
 }
 
 
@@ -154,7 +174,7 @@ function wpmusiclinks_add_info_manually() {
    	// Decide What To Do
    	switch($_POST['do']) {
    		case __('Add Item', 'wpmusiclinks'):
-   			$name = addslashes(trim($_POST['wpmusiclinks_name']));
+   			$name = str_replace("'", "’", addslashes(trim($_POST['wpmusiclinks_name'])));
    			$type = addslashes(trim($_POST['wpmusiclinks_type']));
    			$mbid = addslashes(trim($_POST['wpmusiclinks_mbid']));
    			$website = addslashes(trim($_POST['wpmusiclinks_website']));

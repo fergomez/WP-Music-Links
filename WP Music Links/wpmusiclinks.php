@@ -15,6 +15,7 @@ $wpdb->musiclinks = $wpdb->prefix . 'musiclinks';
 $wpdb->musiclinksr = $wpdb->prefix . 'musiclinks_rel';
 
 $mainfile_path = 'wpmusiclinks.php';
+$plugin_path = 'wpmusiclinks/' . $mainfile_path;
 $addfile_path = 'wpmusiclinks-add.php';
 $editfile_path = 'wpmusiclinks-edit.php';
 
@@ -109,9 +110,9 @@ function wpmusiclinks_create_tables() {
  * @return boolean true if we already have the item in our database ($results != 0)
  */
 function wpmusiclinks_cache_check($name, $type)  {
-   global $wpdb;
-   $query = "SELECT COUNT(*) FROM $wpdb->musiclinks 
-                  WHERE `name` = '$name' AND `type` = '$type';";
+   global $wpdb; 
+   $query = $wpdb->prepare("SELECT COUNT(*) FROM $wpdb->musiclinks 
+                           WHERE `name` = '%s' AND `type` = '%s';", str_replace("'", "’", $name), $type);
    $results = $wpdb->get_var($query);
    return ($results!=0);
 }
@@ -124,29 +125,29 @@ function wpmusiclinks_cache_check($name, $type)  {
  */
 function wpmusiclinks_get_value($name, $type, $val_type) {
    global $wpdb;
+   $name = str_replace("'", "’", $name);
    if (wpmusiclinks_cache_check($name, $type)) {
       if ($val_type == 'id') {
-         $query = "SELECT id as val
-                   FROM $wpdb->musiclinks
-                   WHERE name = '$name' AND
-                         type = '$type'
-                   LIMIT 1;";
+         $query = $wpdb->prepare("SELECT id as val
+                                  FROM $wpdb->musiclinks
+                                  WHERE name = '%s' AND
+                                        type = '%s'
+                                  LIMIT 1;", $name, $type);
       } elseif ($val_type == "mbid") {
-         $query = "SELECT mbid as val
-                   FROM $wpdb->musiclinks
-                   WHERE name = '$name' AND
-                         type = 'artist'
-                   LIMIT 1;";
-
+         $query = $wpdb->prepare("SELECT mbid as val
+                                  FROM $wpdb->musiclinks
+                                  WHERE name = '%s' AND
+                                  type = 'artist'
+                                  LIMIT 1;", $name);
       } else {
-         $query = "SELECT link_value as val
-                   FROM $wpdb->musiclinks m
-                   JOIN $wpdb->musiclinksr r
-                      ON m.id = r.id
-                   WHERE m.name = '$name' AND
-                         m.type = '$type' AND
-                         r.link_type = '$val_type'
-                   LIMIT 1;";
+         $query = $wpdb->prepare("SELECT link_value as val
+                                  FROM $wpdb->musiclinks m
+                                  JOIN $wpdb->musiclinksr r
+                                     ON m.id = r.id
+                                  WHERE m.name = '%s' AND
+                                        m.type = '%s' AND
+                                        r.link_type = '%s'
+                                  LIMIT 1;", $name, $type, $val_type);
       }
       
       $results = $wpdb->get_results($query);
@@ -294,7 +295,7 @@ function wpmusiclinks_get_links($name, $type) {
                 FROM $wpdb->musiclinks m
                 JOIN $wpdb->musiclinksr r
                    ON m.id = r.id
-                WHERE m.name = '$name' AND
+                WHERE m.name = '" . str_replace("'", "’", $name) . "' AND
                       m.type = '$type' 
                 ORDER BY r.link_order ASC;";
       $results = $wpdb->get_results($query);
@@ -322,8 +323,8 @@ function wpmusiclinks_get_links($name, $type) {
 function wpmusiclinks_shortcode($atts) {
    $atts = shortcode_atts(
             array(
-                   artist => '',
-                   festival => '',  
+                   'artist' => '',
+                   'festival' => '',  
                      ), $atts);
    
    $artist = $atts['artist'];
@@ -353,7 +354,6 @@ function wpmusiclinks_shortcode($atts) {
  */
 function wpmusiclinks_add_menu() {
    if (function_exists('add_menu_page')) {
-      $test = $plugin_path . $mainfile_path;
       add_menu_page('WP Music Links', "WP Music Links", 8, 'wpmusiclinks/wpmusiclinks.php', '', plugins_url('wpmusiclinks/img/wpmusiclogo.png'));
    }
    if (function_exists('add_submenu_page')) {
