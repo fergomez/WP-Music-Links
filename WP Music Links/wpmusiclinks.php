@@ -353,13 +353,22 @@ function wpmusiclinks_shortcode($atts) {
  * Adds a menu in our dashboard for allowed users.
  */
 function wpmusiclinks_add_menu() {
+   $editor = get_role("editor");
+   $editor->add_cap("wpmusiclinks_cap", true);
+   
+   $author = get_role("author");
+   $author->add_cap("wpmusiclinks_cap", true);
+   
+   $admin = get_role("administrator");
+   $admin->add_cap("wpmusiclinks_cap", true);
+   
    if (function_exists('add_menu_page')) {
-      add_menu_page('WP Music Links', "WP Music Links", 8, 'wpmusiclinks/wpmusiclinks.php', '', plugins_url('wpmusiclinks/img/wpmusiclogo.png'));
+      add_menu_page('WP Music Links', "WP Music Links", "wpmusiclinks_cap", 'wpmusiclinks/wpmusiclinks.php', '', plugins_url('wpmusiclinks/img/wpmusiclogo.png'));
    }
    if (function_exists('add_submenu_page')) {
-      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Desktop', 'wpmusiclinks'), __('Desktop', 'wpmusiclinks'), 8, 'wpmusiclinks/wpmusiclinks.php', "wpmusiclinks_desktop");
-      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Add Item', 'wpmusiclinks'), __('Add Item', 'wpmusiclinks'), 8, 'wpmusiclinks/wpmusiclinks-add.php', "wpmusiclinks_add_info_manually");
-      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Edit Item', 'wpmusiclinks'), __('Edit Item', 'wpmusiclinks'), 8, 'wpmusiclinks/wpmusiclinks-edit.php' , "wpmusiclinks_edit_info");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Desktop', 'wpmusiclinks'), __('Desktop', 'wpmusiclinks'), "wpmusiclinks_cap", 'wpmusiclinks/wpmusiclinks.php', "wpmusiclinks_desktop");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Add Item', 'wpmusiclinks'), __('Add Item', 'wpmusiclinks'), "wpmusiclinks_cap", 'wpmusiclinks/wpmusiclinks-add.php', "wpmusiclinks_add_info_manually");
+      add_submenu_page('wpmusiclinks/wpmusiclinks.php', __('WP Music Links Edit Item', 'wpmusiclinks'), __('Edit Item', 'wpmusiclinks'), "wpmusiclinks_cap", 'wpmusiclinks/wpmusiclinks-edit.php' , "wpmusiclinks_edit_info");
    }
 }
 
@@ -423,7 +432,8 @@ $locale = get_locale();
 if ( file_exists( 'wpmusiclinks/languages/' . $locale . '.mo' ) ) {
    load_textdomain( 'wpmusiclinks', 'wpmusiclinks/languages/' . $locale . '.mo' );
 }
-// check permissions?
+
+
 // export file
 // import file, update the new ones
 ?>
