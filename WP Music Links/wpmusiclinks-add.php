@@ -14,11 +14,13 @@ add_action('init', 'wpmusiclinks_lang');
  * @param string $artist
  */
 function wpmusiclinks_get_mbid($artist) {
-   $xml = @simplexml_load_file("http://musicbrainz.org/ws/2/artist/?query=artist:" . urlencode($artist));
+   $url = (strpos($artist, "-")) ? "http://musicbrainz.org/ws/2/artist/?query=" . urlencode($artist): 
+                                   "http://musicbrainz.org/ws/2/artist/?query=artist:" . urlencode($artist);
+   $xml = @simplexml_load_file($url);
    if (empty($xml)) die('Problem with the xml');
    foreach($xml->{'artist-list'} as $artistlist) {
       foreach($artistlist->artist as $artistinfo) {
-         if (str_replace("’", "'", $artistinfo->name) == $artist) {
+         if (strtolower(str_replace("‐", "-", str_replace("’", "'", $artistinfo->name))) == strtolower($artist)) {
             $mbid = $artistinfo['id'];
             return $mbid;
          }
