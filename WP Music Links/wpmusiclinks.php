@@ -71,7 +71,7 @@ function wpmusiclinks_create_tables() {
                               `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, 
                               `name` varchar(100) CHARACTER SET utf8 NOT NULL DEFAULT '',
                               `type` varchar(50) CHARACTER SET utf8 NOT NULL DEFAULT '',
-                              `mbid` varchar (20) NULL,
+                              `mbid` varchar (50) NULL,
                               PRIMARY KEY (`id`),
                               CONSTRAINT uq_musiclink_name
                                  UNIQUE (name, type)) $charset_collate;";
@@ -301,12 +301,12 @@ function wpmusiclinks_get_links($name, $type) {
       $results = $wpdb->get_results($query);
       
       if ($results) {
-         $links = "<div class=\"wpmusiclinks\"><strong>$name</strong>: ";
+         $links = "<span class=\"wpmusiclinks\"><strong>$name</strong>: ";
          foreach ($results as $result) {
             if (!empty($result->val))
                $links   .= '<a href="' . $result->val . '" title="' . $result->name . '">' . $result->name . '</a> | ';
          }
-         $links = substr($links, 0, strlen($links) - 3) . "</div>";
+         $links = substr($links, 0, strlen($links) - 3) . "<br /></span>";
          return $links;
       } 
    } elseif ($type == "artist") {
