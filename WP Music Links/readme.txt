@@ -28,6 +28,10 @@ Well, it will also be updated (hopefully) in the next version.
 
 == Changelog ==
 
+= 0.1.2 = 
+* Fixed bug: editing festival with no Last.fm information, it would set the item as an artist ("=" on an if instead of "==").
+* Enhancement: if the plugin does not find the selected item in the edition, it will not continue and will ask for another one.
+
 = 0.1.1 =
 * Fixed bug: problem with artists having an ampersand ("&") on their name.
 

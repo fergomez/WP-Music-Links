@@ -97,6 +97,12 @@ function wpmusiclinks_edit_info() {
    		   $name = str_replace("'", "’", addslashes(trim($_POST['wpmusiclinks_name'])));
    		   $type = addslashes(trim($_POST['wpmusiclinks_type']));
    		   
+   		   if (!wpmusiclinks_cache_check($name, $type)) {
+   		      $text = '<p style="color: red;">'.sprintf(__('Problem updating Item \'%s\': Not an artist or festival found in our database. Please, try another one.', 'wpmusiclinks'), stripslashes($name)).'</p>';
+   		      $type = "";
+   		      break;
+   		   }
+   		   
    		   if ($type == "artist") {
    		      $mbid =  wpmusiclinks_get_artist_mbid($name);
    		      $website = wpmusiclinks_get_artist_website($name);
@@ -126,7 +132,7 @@ function wpmusiclinks_edit_info() {
    			$lastfm = addslashes(trim($_POST['wpmusiclinks_lastfm']));
    			$id = addslashes(trim($_POST['wpmusiclinks_id']));
    			 
-   			if (empty($lastfm) && $type="artist") $lastfm = "http://last.fm/music/" . $name;   
+   			if (empty($lastfm) && $type == "artist") $lastfm = "http://last.fm/music/" . $name;   
    			
    			// yes, I'm omitting the order right now... sorry for it! I'll fix it later, promised.
    			if ($type == "artist") 
@@ -148,7 +154,7 @@ function wpmusiclinks_edit_info() {
     }
     
     if($type=="fail") {
-       echo '<!-- Last Action --><div id="message" class="updated fade">' . _e('Problem getting item', 'wpmusiclinks') . '</div>';
+       echo '<!-- Last Action --><div id="message" class="updated fade"><p style="color: red;">' . _e('Problem getting item', 'wpmusiclinks') . '</p></div>';
     }
     
    ?>
