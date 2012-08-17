@@ -14,13 +14,16 @@ add_action('init', 'wpmusiclinks_lang');
  * @param string $artist
  */
 function wpmusiclinks_get_mbid($artist) {
+   $old_artist = $artist;
+   $artist = str_replace(" &#038; ", " and ", $artist);
    $url = (strpos($artist, "-")) ? "http://musicbrainz.org/ws/2/artist/?query=" . urlencode($artist): 
                                    "http://musicbrainz.org/ws/2/artist/?query=artist:" . urlencode($artist);
    $xml = @simplexml_load_file($url);
    if (empty($xml)) die('Problem with the xml');
    foreach($xml->{'artist-list'} as $artistlist) {
       foreach($artistlist->artist as $artistinfo) {
-         if (strtolower(str_replace("‐", "-", str_replace("’", "'", $artistinfo->name))) == strtolower($artist)) {
+         $fixed_name = str_replace("&", "&#038;", str_replace("‐", "-", str_replace("’", "'", $artistinfo->name)));
+         if (strtolower($fixed_name) == strtolower($old_artist)) {
             $mbid = $artistinfo['id'];
             return $mbid;
          }
@@ -41,7 +44,7 @@ function wpmusiclinks_get_info($name) {
    $url = "http://musicbrainz.org/artist/" . $mbid;
    $name = str_replace("'", "’", $name);
    $html = @file_get_html($url);
-    
+
    $twitter = "";
    $facebook = "";
    $website = "";

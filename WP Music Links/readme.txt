@@ -28,6 +28,9 @@ Well, it will also be updated (hopefully) in the next version.
 
 == Changelog ==
 
+= 0.1.1 =
+* Fixed bug: problem with artists having an ampersand ("&") on their name.
+
 = 0.1 =
 * Basic working getting information automaticly from MusicBrainz or manually. 
 * Also successful editing process.  
