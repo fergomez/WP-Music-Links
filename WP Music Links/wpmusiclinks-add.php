@@ -178,7 +178,7 @@ function wpmusiclinks_add_info_manually() {
    			$facebook = addslashes(trim($_POST['wpmusiclinks_facebook']));
    			$twitter = addslashes(trim($_POST['wpmusiclinks_twitter']));
    			$lastfm = addslashes(trim($_POST['wpmusiclinks_lastfm']));
-   			if (empty($lastfm) && $type="artist") $lastfm = "http://last.fm/music/" . $name;
+   			if (empty($lastfm) && $type == "artist") $lastfm = "http://last.fm/music/" . $name;
    			
    			// yes, I'm omitting the order right now... sorry for it! I'll fix it later, promised.
    			if ($type == "artist") 
@@ -210,7 +210,12 @@ function wpmusiclinks_add_info_manually() {
    		</tr>
    		<tr>
    			<th width="20%" scope="row" valign="top"><?php _e('Type', 'wpmusiclinks') ?></th>
-   			<td width="80%"><input type="text" size="50" name="wpmusiclinks_type" value="" /></td>
+   			<td width="80%">
+   			   <select name="wpmusiclinks_type">
+      			   <option value="artist"><?php _e('Artist', 'wpmusiclinks') ?></option>
+      			   <option value="festival"><?php _e('Festival', 'wpmusiclinks') ?></option>
+   			   </select>
+   			</td>
    		</tr>
    		<tr>
    			<th width="30%" scope="row" valign="top"><?php _e('MusicBrainz ID', 'wpmusiclinks') ?> <?php _e('(Just for artists)', 'wpmusiclinks') ?></th>

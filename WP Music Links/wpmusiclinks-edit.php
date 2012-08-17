@@ -170,7 +170,12 @@ function wpmusiclinks_edit_info() {
    		</tr>
    		<tr>
    			<th width="20%" scope="row" valign="top"><?php _e('Type', 'wpmusiclinks') ?></th>
-   			<td width="80%"><input type="text" size="50" name="wpmusiclinks_type" value="<?php echo $type; ?>" /></td>
+   			<td width="80%">
+   			   <select name="wpmusiclinks_type">
+      			   <option value="artist"><?php _e('Artist', 'wpmusiclinks') ?></option>
+      			   <option value="festival"><?php _e('Festival', 'wpmusiclinks') ?></option>
+   			   </select>
+   			</td>
    		</tr>
    		
    		<?php if ($type == "artist" || $type == "festival") { ?>
