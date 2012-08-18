@@ -28,6 +28,9 @@ Well, it will also be updated (hopefully) in the next version.
 
 == Changelog ==
 
+= 0.1.4 =
+* Added quickcode for editor: javascript alert box for writing the names easier thanks to TinyMCE editor.
+
 = 0.1.3 = 
 * Fixed bug: adding festival with no Last.fm information, it would set the item as an artist ("=" on an if instead of "==").
 * Enhancement: select tag for type choice (either "artist" either "festival").

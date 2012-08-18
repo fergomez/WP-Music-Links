@@ -350,6 +350,63 @@ function wpmusiclinks_shortcode($atts) {
 
 
 /**
+ * Action for adding the quickcode for TinyMCE
+ */
+add_action('init', 'wpmusiclinks_tinymce_addbuttons');
+function wpmusiclinks_tinymce_addbuttons() {
+   if(get_user_option('rich_editing') == 'true') {
+      add_filter("mce_external_plugins", "wpmusiclinks_tinymce_addplugin");
+      add_filter('mce_buttons', 'wpmusiclinks_tinymce_registerbutton');
+   }
+}
+function wpmusiclinks_tinymce_registerbutton($buttons) {
+   array_push($buttons, 'separator', 'wpmusiclinks');
+   return $buttons;
+}
+function wpmusiclinks_tinymce_addplugin($plugin_array) {
+   $plugin_array['wpmusiclinks'] = plugins_url('wpmusiclinks/tinymce/plugins/wpmusiclinks/editor_plugin.js');
+   return $plugin_array;
+}
+
+
+/**
+ * Actions for loading the script with the quickcode for the editor
+ */
+add_action('admin_footer-post-new.php', 'wpmusiclinks_footer_admin');
+add_action('admin_footer-post.php', 'wpmusiclinks_footer_admin');
+add_action('admin_footer-page-new.php', 'wpmusiclinks_footer_admin');
+add_action('admin_footer-page.php', 'wpmusiclinks_footer_admin');
+
+function wpmusiclinks_footer_admin() {
+   // Javascript Code Courtesy Of WP-AddQuicktag (http://bueltge.de/wp-addquicktags-de-plugin/120/)
+   // And WP-Polls (http://lesterchan.net/portfolio/programming/php/)
+   echo '<script type="text/javascript">'."\n";
+   echo '/* <![CDATA[ */'."\n";
+   echo "\t".'var wpmlvar = {'."\n";
+   echo "\t\t".'enter_name: "'.js_escape(__('Enter text', 'wpmusiclinks')).'",'."\n";
+   echo "\t\t".'text: "'.js_escape(__('Text', 'wpmusiclinks')).'",'."\n";
+   echo "\t\t".'insert_name: "'.js_escape(__('Insert_name', 'wpmusiclinks')).'"'."\n";
+   echo "\t".'};'."\n";
+   echo "\t".'function insertName(where, myField) {'."\n";
+   echo "\t\t".'var name = jQuery.trim(prompt(wpmlvar.enter_name));'."\n";
+   echo "\t\t\t".'if(where == \'code\') {'."\n";
+   echo "\t\t\t\t".'edInsertContent(myField, \'[wpmusiclinks artist="\' + name + \'"]\');'."\n";
+   echo "\t\t\t".'} else {'."\n";
+   echo "\t\t\t\t".'return \'[wpmusiclinks artist="\' + name + \'"]\';'."\n";
+   echo "\t\t\t".'}'."\n";
+   echo "\t".'}'."\n";
+   echo "\t".'if(document.getElementById("ed_toolbar")){'."\n";
+   echo "\t\t".'edButtons[edButtons.length] = new edButton("ed_wpmusiclinks",wpmlvar.text, "", "","");'."\n";
+   echo "\t\t".'jQuery(document).ready(function($){'."\n";
+   echo "\t\t\t".'$(\'#qt_content_ed_wpmusiclinks\').replaceWith(\'<input type="button" id="qt_content_ed_wpmusiclinks" accesskey="" class="ed_button" onclick="insertName(\\\'code\\\', edCanvas);" value="\' + wpmlvar.text + \'" title="\' + wpmlvar.insert_name + \'" />\');'."\n";
+   echo "\t\t".'});'."\n";
+   echo "\t".'}'."\n";   
+   echo '/* ]]> */'."\n";
+   echo '</script>'."\n";
+}
+
+
+/**
  * Adds a menu in our dashboard for allowed users.
  */
 function wpmusiclinks_add_menu() {
