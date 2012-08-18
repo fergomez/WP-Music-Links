@@ -28,6 +28,9 @@ Well, it will also be updated (hopefully) in the next version.
 
 == Changelog ==
 
+= 0.1.5 = 
+* Modified quickcode for adding also the type of the item, even easier.
+
 = 0.1.4 =
 * Added quickcode for editor: javascript alert box for writing the names easier thanks to TinyMCE editor.
 

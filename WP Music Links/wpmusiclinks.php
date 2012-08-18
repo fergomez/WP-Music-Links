@@ -372,27 +372,29 @@ function wpmusiclinks_tinymce_addplugin($plugin_array) {
 /**
  * Actions for loading the script with the quickcode for the editor
  */
-add_action('admin_footer-post-new.php', 'wpmusiclinks_footer_admin');
-add_action('admin_footer-post.php', 'wpmusiclinks_footer_admin');
-add_action('admin_footer-page-new.php', 'wpmusiclinks_footer_admin');
-add_action('admin_footer-page.php', 'wpmusiclinks_footer_admin');
+add_action('admin_footer-post-new.php', 'wpmusiclinks_footer_scripts');
+add_action('admin_footer-post.php', 'wpmusiclinks_footer_scripts');
+add_action('admin_footer-page-new.php', 'wpmusiclinks_footer_scripts');
+add_action('admin_footer-page.php', 'wpmusiclinks_footer_scripts');
 
-function wpmusiclinks_footer_admin() {
+function wpmusiclinks_footer_scripts() {
    // Javascript Code Courtesy Of WP-AddQuicktag (http://bueltge.de/wp-addquicktags-de-plugin/120/)
    // And WP-Polls (http://lesterchan.net/portfolio/programming/php/)
    echo '<script type="text/javascript">'."\n";
    echo '/* <![CDATA[ */'."\n";
    echo "\t".'var wpmlvar = {'."\n";
-   echo "\t\t".'enter_name: "'.js_escape(__('Enter text', 'wpmusiclinks')).'",'."\n";
-   echo "\t\t".'text: "'.js_escape(__('Text', 'wpmusiclinks')).'",'."\n";
+   echo "\t\t".'enter_name: "'.js_escape(__('Enter name', 'wpmusiclinks')).'",'."\n";
+   echo "\t\t".'enter_type: "'.js_escape(__('Enter type', 'wpmusiclinks')).'",'."\n";
+   echo "\t\t".'text: "'.js_escape(__('Add WPML item', 'wpmusiclinks')).'",'."\n";
    echo "\t\t".'insert_name: "'.js_escape(__('Insert_name', 'wpmusiclinks')).'"'."\n";
    echo "\t".'};'."\n";
    echo "\t".'function insertName(where, myField) {'."\n";
    echo "\t\t".'var name = jQuery.trim(prompt(wpmlvar.enter_name));'."\n";
+   echo "\t\t".'var type = jQuery.trim(prompt(wpmlvar.enter_type));'."\n";
    echo "\t\t\t".'if(where == \'code\') {'."\n";
-   echo "\t\t\t\t".'edInsertContent(myField, \'[wpmusiclinks artist="\' + name + \'"]\');'."\n";
+   echo "\t\t\t\t".'edInsertContent(myField, \'[wpmusiclinks \' + type + \'="\' + name + \'"]\');'."\n";
    echo "\t\t\t".'} else {'."\n";
-   echo "\t\t\t\t".'return \'[wpmusiclinks artist="\' + name + \'"]\';'."\n";
+   echo "\t\t\t\t".'return \'[wpmusiclinks \' + type + \'="\' + name + \'"]\';'."\n";
    echo "\t\t\t".'}'."\n";
    echo "\t".'}'."\n";
    echo "\t".'if(document.getElementById("ed_toolbar")){'."\n";
