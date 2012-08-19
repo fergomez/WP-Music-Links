@@ -4,7 +4,7 @@ Plugin Name: WP Music Links
 Plugin URI: http://github.com/fergomez/wp-music-links
 Description: Adds links to social networks of artists and festivals easily in your posts.
    Usage: [musiclinks artist="name"], [musiclinks festival="name"].
-Version: 0.1
+Version: 0.1.6
 Author: Fernando Gómez Pose
 Author URI: http://fergomez.es/
 License: GPL2
@@ -306,13 +306,14 @@ function wpmusiclinks_get_links($name, $type) {
             if (!empty($result->val))
                $links   .= '<a href="' . $result->val . '" title="' . $result->name . '">' . $result->name . '</a> | ';
          }
-         $links = substr($links, 0, strlen($links) - 3) . "<br /></span>";
+         $links = substr($links, 0, strlen($links) - 3) . "</span>";
          return $links;
       } 
    } elseif ($type == "artist") {
-      wpmusiclinks_get_info($name, $type);
-      return wpmusiclinks_get_links($name, $type);
-   } else return "";
+      if (wpmusiclinks_get_info($name, $type))
+         return wpmusiclinks_get_links($name, $type);
+   }
+   return "";
 }
 
 
@@ -392,9 +393,9 @@ function wpmusiclinks_footer_scripts() {
    echo "\t\t".'var name = jQuery.trim(prompt(wpmlvar.enter_name));'."\n";
    echo "\t\t".'var type = jQuery.trim(prompt(wpmlvar.enter_type));'."\n";
    echo "\t\t\t".'if(where == \'code\') {'."\n";
-   echo "\t\t\t\t".'edInsertContent(myField, \'[wpmusiclinks \' + type + \'="\' + name + \'"]\');'."\n";
+   echo "\t\t\t\t".'edInsertContent(myField, \'[musiclinks \' + type + \'="\' + name + \'"]\');'."\n";
    echo "\t\t\t".'} else {'."\n";
-   echo "\t\t\t\t".'return \'[wpmusiclinks \' + type + \'="\' + name + \'"]\';'."\n";
+   echo "\t\t\t\t".'return \'[musiclinks \' + type + \'="\' + name + \'"]\';'."\n";
    echo "\t\t\t".'}'."\n";
    echo "\t".'}'."\n";
    echo "\t".'if(document.getElementById("ed_toolbar")){'."\n";

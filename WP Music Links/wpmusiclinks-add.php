@@ -36,11 +36,13 @@ function wpmusiclinks_get_mbid($artist) {
 /**
  * Gets the information from MusicBrainz API and stores it into our database.
  * @param string $name name of artist
+ * @return null in case of error
  */
 function wpmusiclinks_get_info($name) {
    require_once('simple_html_dom/simple_html_dom.php');
     
    $mbid = wpmusiclinks_get_mbid($name);
+   if (empty($mbid)) return false;
    $url = "http://musicbrainz.org/artist/" . $mbid;
    $name = str_replace("'", "’", $name);
    $html = @file_get_html($url);
@@ -57,7 +59,7 @@ function wpmusiclinks_get_info($name) {
 
    $lastfm = "http://last.fm/music/" . $name; 
    wpmusiclinks_add_artist($name, $mbid, $website, $facebook, $twitter, $lastfm);
-
+   return true;
 }
 
 

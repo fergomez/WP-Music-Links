@@ -28,6 +28,10 @@ Well, it will also be updated (hopefully) in the next version.
 
 == Changelog ==
 
+= 0.1.6 =
+* Fixed bug: when there is no information about an artist on MusicBrainz, now the plugin does not crash.
+* Enhancement: "<br />" removed from the HTML code of the shortcode, so in case of two shortcodes, we can place them as we want
+ 
 = 0.1.5 = 
 * Modified quickcode for adding also the type of the item, even easier.
 
